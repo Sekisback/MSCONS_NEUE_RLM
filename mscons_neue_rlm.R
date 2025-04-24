@@ -4,9 +4,10 @@
 #
 # Author : Sascha Kornberger
 # Datum  : 23.04.2025
-# Version: 1.0.0
+# Version: 1.0.1
 #
 # History:
+# 1.0.1  Funktion: Anpassung der sender und empfaegr auf 9903606000005
 # 1.0.0  Funktion: Initiale Freigabe
 #
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --
@@ -20,7 +21,7 @@ options(scipen = 999)
 
 
 # ERZEUGEN DER MSCONS ----
-erzeuge_mscons <- function(sender_msb, empfaenger_vnb, marktlokation, start_datum, obis) {
+erzeuge_mscons <- function(empfaenger_vnb, marktlokation, start_datum, obis) {
 
   # BENOETIGTE PAKETE ------------------------------------------------------------
   ## Liste der Pakete ----
@@ -45,8 +46,14 @@ erzeuge_mscons <- function(sender_msb, empfaenger_vnb, marktlokation, start_datu
   # ----                           FUNKTIONEN                                 ----
   # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- -#
   
+  ## EEG interner BDEW COde aus der ZFA
+  sender_msb     <- "9903606000005"
+  empfaenger     <- "9903606000005"
+  
+  
   ## Startdatum = -1 Tag ----
   if (is.character(start_datum)) {
+    datum_file  <- dmy(paste(start_datum))
     start_datum <- dmy_hm(paste(start_datum, "22:00")) - days(1)
   }
   ## Enddatum = +8 Tage ----
@@ -56,9 +63,8 @@ erzeuge_mscons <- function(sender_msb, empfaenger_vnb, marktlokation, start_datu
   obis <- gsub(":", "?:", obis, fixed = TRUE)
   
   ## Erzeuge Referenz-ID ----
-  zeit_ref <- format(Sys.time(), "%M%S%OS3") |> gsub("\\.", "", x = _)
-  ref_id <- paste0("S1", zeit_ref)
-  
+  ref_id <- format(Sys.time(), "%M%S%OS3") |> gsub("\\.", "", x = _)
+
   ## Erstellungszeitpunkt ----
   tag    <- format(Sys.time(), "%y%m%d")
   dtmtag <- format(Sys.time(), "%Y%m%d")
@@ -79,13 +85,13 @@ erzeuge_mscons <- function(sender_msb, empfaenger_vnb, marktlokation, start_datu
   ## MSCONS zusammenbauen ----
   kopf <- glue_collapse(glue(
     "UNA:+,? '",
-    "UNB+UNOC:3+{sender_msb}:500+{empfaenger_vnb}:500+{tag}:{zeit}+{ref_id}++TL'",
+    "UNB+UNOC:3+{sender_msb}:500+{empfaenger}:500+{tag}:{zeit}+{ref_id}++TL'",
     "UNH+1+MSCONS:D:04B:UN:2.4c'",
     "BGM+Z48+{ref_id}-1+9'",
     "DTM+137:{dtmtag}{zeit}?+00:303'",
     "RFF+Z13:13025'",
     "NAD+MS+{sender_msb}::293'",
-    "NAD+MR+{empfaenger_vnb}::293'",
+    "NAD+MR+{empfaenger}::293'",
     "UNS+D'",
     "NAD+DP'",
     "LOC+172+{marktlokation}'",
@@ -101,17 +107,34 @@ erzeuge_mscons <- function(sender_msb, empfaenger_vnb, marktlokation, start_datu
   mscons_text <- glue_collapse(c(kopf, daten, ende), sep = "")
   
   ## Datei speichern ----
-  dateiname <- glue("MSCONS_TL_{sender_msb}_{empfaenger_vnb}_{dtmtag}_{ref_id}.txt")
-  write_file(mscons_text, file = dateiname)
+  
+  # Speicherpfad zusammensetzen – mit Fallback auf getwd()
+  if (all(c("main_path", "folder", "wilken_out") %in% ls(envir = .GlobalEnv))) {
+    pfad <- file.path(main_path, folder, wilken_out, "MSCONS")
+  } else {
+    pfad <- file.path(getwd(), "MSCONS")
+  }
+  
+  # Ordner erstellen, falls nicht vorhanden
+  if (!dir.exists(pfad)) dir.create(pfad, recursive = TRUE)
+  
+  # Dateiname definieren
+  dateiname <- glue("MSCONS_S1_{marktlokation}_{empfaenger_vnb}_{format(datum_file, '%Y%m%d')}_{ref_id}.txt")
+  
+  # Vollständiger Pfad + Dateiname
+  voller_pfad <- file.path(pfad, dateiname)
+  
+  # Datei speichern
+  write_file(mscons_text, file = voller_pfad)
 }
 
 
 # Test Parameter ----
-sender_msb     <- "9905336000008"
-empfaenger_vnb <- "9900473000002"
-marktlokation  <- "10181928253"
-start_datum    <- "01.06.2025"
-obis           <- "1-1:1.29.0"
-
-# Funktion aufrufen ----
-erzeuge_mscons(sender_msb, empfaenger_vnb, marktlokation, start_datum, obis)
+# 
+# empfaenger_vnb <- "9900473000002"
+# marktlokation  <- "10181928253"
+# start_datum    <- "01.06.2025"
+# obis           <- "1-1:1.29.0"
+# 
+# # Funktion aufrufen ----
+# erzeuge_mscons(empfaenger_vnb, marktlokation, start_datum, obis)
