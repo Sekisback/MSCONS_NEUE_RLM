@@ -18,7 +18,9 @@ options(install.packages.check.source = "no")
 # Verhindert die wissenschaftliche Notation für Zahlen.
 options(scipen = 999)
 
-erzeuge_mscons <- function(sender_gln, empfaenger_gln, zaehlpunkt_id, start_datum, obis) {
+
+# ERZEUGEN DER MSCONS ----
+erzeuge_mscons <- function(sender_msb, empfaenger_vnb, marktlokation, start_datum, obis) {
 
   # BENOETIGTE PAKETE ------------------------------------------------------------
   ## Liste der Pakete ----
@@ -77,16 +79,16 @@ erzeuge_mscons <- function(sender_gln, empfaenger_gln, zaehlpunkt_id, start_datu
   ## MSCONS zusammenbauen ----
   kopf <- glue_collapse(glue(
     "UNA:+,? '",
-    "UNB+UNOC:3+{sender_gln}:500+{empfaenger_gln}:500+{tag}:{zeit}+{ref_id}++TL'",
+    "UNB+UNOC:3+{sender_msb}:500+{empfaenger_vnb}:500+{tag}:{zeit}+{ref_id}++TL'",
     "UNH+1+MSCONS:D:04B:UN:2.4c'",
     "BGM+Z48+{ref_id}-1+9'",
     "DTM+137:{dtmtag}{zeit}?+00:303'",
     "RFF+Z13:13025'",
-    "NAD+MS+{sender_gln}::293'",
-    "NAD+MR+{empfaenger_gln}::293'",
+    "NAD+MS+{sender_msb}::293'",
+    "NAD+MR+{empfaenger_vnb}::293'",
     "UNS+D'",
     "NAD+DP'",
-    "LOC+172+{zaehlpunkt_id}'",
+    "LOC+172+{marktlokation}'",
     "DTM+163:{format(start_datum, '%Y%m%d%H%M')}?+00:303'",
     "DTM+164:{format(end_datum, '%Y%m%d%H%M')}?+00:303'",
     "LIN+1'",
@@ -99,17 +101,17 @@ erzeuge_mscons <- function(sender_gln, empfaenger_gln, zaehlpunkt_id, start_datu
   mscons_text <- glue_collapse(c(kopf, daten, ende), sep = "")
   
   ## Datei speichern ----
-  dateiname <- glue("MSCONS_TL_{sender_gln}_{empfaenger_gln}_{dtmtag}_{ref_id}.txt")
+  dateiname <- glue("MSCONS_TL_{sender_msb}_{empfaenger_vnb}_{dtmtag}_{ref_id}.txt")
   write_file(mscons_text, file = dateiname)
 }
 
 
-# Parameter vorbereiten
-sender_gln     <- "9905336000008"
-empfaenger_gln <- "9904029000002"
-zaehlpunkt_id  <- "10181928253"
+# Test Parameter ----
+sender_msb     <- "9905336000008"
+empfaenger_vnb <- "9900473000002"
+marktlokation  <- "10181928253"
 start_datum    <- "01.06.2025"
 obis           <- "1-1:1.29.0"
 
-# Funktion aufrufen
-erzeuge_mscons(sender_gln, empfaenger_gln, zaehlpunkt_id, start_datum, obis)
+# Funktion aufrufen ----
+erzeuge_mscons(sender_msb, empfaenger_vnb, marktlokation, start_datum, obis)
