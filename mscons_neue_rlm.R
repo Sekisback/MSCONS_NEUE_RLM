@@ -7,7 +7,7 @@
 # Version: 1.0.1
 #
 # History:
-# 1.0.1  Funktion: Anpassung der sender und empfaegr auf 9903606000005
+# 1.0.1  Funktion: Anpassung der sender und empfaenger auf 9903606000005
 # 1.0.0  Funktion: Initiale Freigabe
 #
 # --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --

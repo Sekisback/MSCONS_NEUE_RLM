@@ -1,0 +1,10 @@
+MSCONS lesbar machen
+
+# sublime text
+View -> Show Console
+
+alles markieren STRG + A
+
+In der Console eingeben
+view.run_command("insert_snippet", {"contents": view.substr(sublime.Region(0, view.size())).replace("'", "'\n")})
+
